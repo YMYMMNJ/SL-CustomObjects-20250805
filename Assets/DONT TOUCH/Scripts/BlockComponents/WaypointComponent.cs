@@ -14,16 +14,21 @@ public class WaypointComponent : SchematicBlock
 		base.Decompile(ref gameObject, block, parent);
 	}
 
-	private void Start()
-	{
-		TryGetComponent(out _filter);
-		TryGetComponent(out _renderer);
-	}
-
+	// Private fields are reset by script recompilation (domain reload) while Start is not called again
+	// in edit mode, so the references are re-acquired lazily.
 	private void Update()
 	{
-		_filter.hideFlags = HideFlags.HideInInspector;
-		_renderer.hideFlags = HideFlags.HideInInspector;
+		if (_filter == null)
+			TryGetComponent(out _filter);
+
+		if (_renderer == null)
+			TryGetComponent(out _renderer);
+
+		if (_filter != null)
+			_filter.hideFlags = HideFlags.HideInInspector;
+
+		if (_renderer != null)
+			_renderer.hideFlags = HideFlags.HideInInspector;
 	}
 
 	private MeshFilter _filter;

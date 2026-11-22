@@ -177,24 +177,32 @@ public class TeleportComponent : SchematicBlock
     private MeshFilter _filter;
     private MeshRenderer _renderer;
     
-    private void Awake()
-    {
-        TryGetComponent(out _filter);
-        TryGetComponent(out _renderer);
-    }
-
     private void Update()
     {
-        _filter.hideFlags = HideFlags.HideInInspector;
-        _renderer.hideFlags = HideFlags.HideInInspector;
+        // Private fields are reset by script recompilation (domain reload) while Awake is not called again
+        // in edit mode, so the references are re-acquired lazily.
+        if (_filter == null)
+            TryGetComponent(out _filter);
+
+        if (_renderer == null)
+            TryGetComponent(out _renderer);
+
+        if (_filter != null)
+            _filter.hideFlags = HideFlags.HideInInspector;
+
+        if (_renderer != null)
+            _renderer.hideFlags = HideFlags.HideInInspector;
 
         if (string.IsNullOrEmpty(Id))
             Id = Guid.NewGuid().ToString("N").Substring(0, 8);
 
+        if (TargetTeleporters == null)
+            return;
+
         foreach (TargetTeleport targetTeleport in TargetTeleporters)
         {
-            if (targetTeleport.Teleport != null)
-                targetTeleport.Id = targetTeleport.Teleport.Id;    
+            if (targetTeleport != null && targetTeleport.Teleport != null)
+                targetTeleport.Id = targetTeleport.Teleport.Id;
         }
     }
 

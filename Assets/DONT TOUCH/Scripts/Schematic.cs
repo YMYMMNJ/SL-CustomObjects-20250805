@@ -61,11 +61,7 @@ public class Schematic : SchematicBlock
                     }
                 }
 
-                AssetBundleBuild[] buildMap = new AssetBundleBuild[1];
-                buildMap[0].assetBundleName = runtimeAnimatorController.name;
-                buildMap[0].assetNames = assetPaths.ToArray();
-
-                BuildPipeline.BuildAssetBundles(schematicDirectoryPath, buildMap, AssetBundleBuildOptions, EditorUserBuildSettings.activeBuildTarget);
+                BuildAnimatorBundle(runtimeAnimatorController.name, assetPaths, schematicDirectoryPath);
             }
 
             if (block.TryGetComponent(out rigidbody))
@@ -126,6 +122,47 @@ public class Schematic : SchematicBlock
         };
 
         // return false;
+    }
+
+    // BuildAssetBundles also writes a "<name>.manifest" file and a manifest bundle named after the output
+    // directory. The bundle is built in a temporary directory so that only the bundle itself (named like the
+    // controller, as the obsolete BuildAssetBundle used to output) ends up in the schematic directory.
+    private static void BuildAnimatorBundle(string bundleName, List<string> assetPaths, string outputDirectory)
+    {
+        string tempDirectory = Path.Combine(outputDirectory, $"_tmp_{bundleName}");
+        Directory.CreateDirectory(tempDirectory);
+
+        try
+        {
+            AssetBundleBuild[] buildMap =
+            {
+                new AssetBundleBuild
+                {
+                    assetBundleName = bundleName,
+                    assetNames = assetPaths.ToArray(),
+                },
+            };
+
+            BuildPipeline.BuildAssetBundles(tempDirectory, buildMap, AssetBundleBuildOptions, EditorUserBuildSettings.activeBuildTarget);
+
+            // Unity lowercases asset bundle names in the output.
+            string builtBundle = Path.Combine(tempDirectory, bundleName.ToLowerInvariant());
+            if (!File.Exists(builtBundle))
+            {
+                Debug.LogError($"Failed to build the animator asset bundle '{bundleName}'.");
+                return;
+            }
+
+            string destination = Path.Combine(outputDirectory, bundleName);
+            if (File.Exists(destination))
+                File.Delete(destination);
+
+            File.Move(builtBundle, destination);
+        }
+        finally
+        {
+            DeleteDirectory(tempDirectory);
+        }
     }
 
     private void SetupOutput(out string schematicDirectoryPath)
