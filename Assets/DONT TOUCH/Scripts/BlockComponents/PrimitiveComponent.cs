@@ -103,16 +103,38 @@ public class PrimitiveComponent : SchematicBlock
         return ColorUtility.TryParseHtmlString(colorText, out color) ? color : Color.magenta * 3f;
     }
 
-    private void Start()
+    // Private fields are reset by script recompilation (domain reload) while Awake/Start are not called again
+    // in edit mode, so the references are re-acquired lazily instead of only once in Start.
+    private bool CacheReferences()
     {
-        TryGetComponent(out _filter);
-        TryGetComponent(out _renderer);
-        _sharedRegular = new Material((Material)Resources.Load("Materials/Regular"));
-        _sharedTransparent = new Material((Material)Resources.Load("Materials/Transparent"));
+        if (_filter == null)
+            TryGetComponent(out _filter);
+
+        if (_renderer == null)
+            TryGetComponent(out _renderer);
+
+        if (_sharedRegular == null)
+        {
+            Material regular = Resources.Load<Material>("Materials/Regular");
+            if (regular != null)
+                _sharedRegular = new Material(regular);
+        }
+
+        if (_sharedTransparent == null)
+        {
+            Material transparent = Resources.Load<Material>("Materials/Transparent");
+            if (transparent != null)
+                _sharedTransparent = new Material(transparent);
+        }
+
+        return _filter != null && _renderer != null && _sharedRegular != null && _sharedTransparent != null;
     }
 
     private void Update()
     {
+        if (!CacheReferences())
+            return;
+
         _filter.hideFlags = HideFlags.HideInInspector;
         _renderer.hideFlags = HideFlags.HideInInspector;
 
@@ -130,6 +152,12 @@ public class PrimitiveComponent : SchematicBlock
     private void OnDrawGizmos()
     {
         if (Visible)
+            return;
+
+        if (_filter == null)
+            TryGetComponent(out _filter);
+
+        if (_filter == null)
             return;
 
         Gizmos.color = new Color(Color.r, Color.g, Color.b, 1f);

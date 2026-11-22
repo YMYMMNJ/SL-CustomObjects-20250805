@@ -12,20 +12,32 @@ public class TextComponent : SchematicBlock
 	private TMP_Text _textMesh;
 	private MeshRenderer _renderer;
 
-	private void Awake()
+	// Private fields are reset by script recompilation (domain reload) while Awake is not called again
+	// in edit mode, so the references are re-acquired lazily.
+	private void CacheReferences()
 	{
-		TryGetComponent(out _textMesh);
-		TryGetComponent(out _renderer);
+		if (_textMesh == null)
+			TryGetComponent(out _textMesh);
+
+		if (_renderer == null)
+			TryGetComponent(out _renderer);
 	}
 
 	private void Update()
 	{
-		_textMesh.margin = Vector4.zero;
-		_renderer.hideFlags = HideFlags.HideInInspector;
+		CacheReferences();
+
+		if (_textMesh != null)
+			_textMesh.margin = Vector4.zero;
+
+		if (_renderer != null)
+			_renderer.hideFlags = HideFlags.HideInInspector;
 	}
 
 	public override void Compile(SchematicBlockData block)
 	{
+		CacheReferences();
+
 		block.Properties = new Dictionary<string, object>
 		{
 			{ "Text", _textMesh.text },
