@@ -30,6 +30,10 @@ public static class Decompiler
             Dict.Add(BlockType.Interactable, gameObject.AddComponent<InteractableComponent>());
             Dict.Add(BlockType.Waypoint, gameObject.AddComponent<WaypointComponent>());
             Dict.Add(BlockType.Door, gameObject.AddComponent<DoorComponent>());
+            Dict.Add(BlockType.Camera, gameObject.AddComponent<Scp079CameraComponent>());
+            Dict.Add(BlockType.ShootingTarget, gameObject.AddComponent<ShootingTargetComponent>());
+            Dict.Add(BlockType.PlayerSpawnPoint, gameObject.AddComponent<PlayerSpawnPointComponent>());
+            Dict.Add(BlockType.Capybara, gameObject.AddComponent<CapybaraComponent>());
 
             return this;
 		}

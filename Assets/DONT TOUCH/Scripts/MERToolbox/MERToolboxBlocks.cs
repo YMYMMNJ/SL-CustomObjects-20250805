@@ -91,7 +91,7 @@ public class MERToolboxBlocks : MonoBehaviour
             block.Compile(rootTransform);
             switch (block)
             {
-                case DoorComponent:
+                case MERToolbox.Components.DoorComponent:
                     block.BlockType = MERTBlockTypes.Door;
                     break;
                 case ClutterComponent:
